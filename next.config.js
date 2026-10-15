@@ -57,7 +57,25 @@ const nextConfig = {
     },
     env: {
         exportHtml: `${exportHtmlEnabled}`
-    }
+    },
+
+    // Extra hosts allowed to load dev resources (comma-separated), e.g. a proxied preview host
+    ...(process.env.NEXT_ALLOWED_DEV_ORIGINS ? {
+        allowedDevOrigins: process.env.NEXT_ALLOWED_DEV_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean)
+    } : {}),
+
+    // Optionally proxy the local PHP server (`backend/server-php.js`) through this origin,
+    // e.g. `PHP_API_PROXY_TARGET=http://localhost:4000` with `NEXT_PUBLIC_LOCAL_PHP_API=/php-api`
+    ...(process.env.PHP_API_PROXY_TARGET && !exportHtmlEnabled ? {
+        async rewrites() {
+            return [
+                {
+                    source: '/php-api/:path*',
+                    destination: `${process.env.PHP_API_PROXY_TARGET}/:path*`,
+                },
+            ]
+        }
+    } : {})
     /*
 
     // change the api route
