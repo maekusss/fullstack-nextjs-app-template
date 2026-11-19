@@ -1,3 +1,8 @@
+// This app's own Next.js API routes (port 3000) are requested both server-side (inside the
+// sandbox, where `localhost:3000` is this process itself) and from the browser (which must stay
+// on its own preview origin, so the path has to be relative there).
+const selfOrigin = (path) => (typeof window !== 'undefined' ? path : `http://localhost:3000${path}`);
+
 const prodUrl = (myProtocol, myHostname, myPort, specifiedPort = '') => {
     if (typeof window !== 'undefined') {
         return window.location.hostname === 'localhost' ? (typeof myPort !== 'undefined' ? `${myProtocol}://${myHostname}:${myPort}` : `${myProtocol}://${myHostname}`) : typeof myPort !== 'undefined' ? (`${window.location.protocol}//${window.location.hostname}:${specifiedPort === '' ? window.location.port : specifiedPort}`) : (`${window.location.protocol}//${window.location.hostname}`);
@@ -103,68 +108,68 @@ const localConfig = {
 	 TYPE: Site Configuration
 	 ------------------------------------------
 	*/
-	"MENU": `http://localhost:3000/api/navigation`,
+	"MENU": selfOrigin(`/api/navigation`),
 
 
 	/*
 	 TYPE: Posts
 	 ------------------------------------------
 	*/
-	"RECEIVE_DEMO_LIST": `http://localhost:3000/api/posts`,
-	"RECEIVE_DEMO_LISTDETAIL": `http://localhost:3000/api/post-detail?id={id}`,
+	"RECEIVE_DEMO_LIST": selfOrigin(`/api/posts`),
+	"RECEIVE_DEMO_LISTDETAIL": selfOrigin(`/api/post-detail?id={id}`),
 
 	/*
 	 TYPE: Posts Pagination
 	 ------------------------------------------
 	*/
-	 "RECEIVE_PAGE_LIST": `http://localhost:3000/api/pagination/page-{page}`,
+	 "RECEIVE_PAGE_LIST": selfOrigin(`/api/pagination/page-{page}`),
 
-	
+
 
 	/*
 	 TYPE: User (The PHP files are located at `./public/server/`)
 	 ------------------------------------------
 	*/
-	"LOGIN_REQUEST": "http://localhost:4000/sessions-create.php",
-	"USER_AUTHENTICATE": "http://localhost:4000/authenticate.php",
+	"LOGIN_REQUEST": "/sessions-create.php",
+	"USER_AUTHENTICATE": "/authenticate.php",
 	"SIGNUP_REQUEST": "",
 
-	  
+
 	/*
 	 TYPE: CRUD (The PHP files are located at `./public/server/`)
 	 ------------------------------------------
 	*/
-	"CRUD_SERVICE": `http://localhost:4000/curd.php`,
-	"CRUD_DATA_INIT": `http://localhost:4000/curd-data-init.php`,
-	
+	"CRUD_SERVICE": `/curd.php`,
+	"CRUD_DATA_INIT": `/curd-data-init.php`,
+
 
 	/*
 	 TYPE: Video
 	 ------------------------------------------
 	*/
-	"VIDEO_URL": `http://localhost:3000/core/video-stream`,
-    "HLS_VIDEO_URL":  `http://localhost:3000/core/hls/{id}/{slug}`,
+	"VIDEO_URL": selfOrigin(`/core/video-stream`),
+    "HLS_VIDEO_URL":  selfOrigin(`/core/hls/{id}/{slug}`),
     "HLS_VIDEO_KEY": `/api/video-key`,  // Please don't write domain
 
-	  
+
 	/*
 	 TYPE: Downlaod remote file
 	 ------------------------------------------
 	*/
-    "DOWNLOAD_REMOTE_FILE": `http://localhost:3000/api/extract-file?sourceurl={sourceurl}`,
+    "DOWNLOAD_REMOTE_FILE": selfOrigin(`/api/extract-file?sourceurl={sourceurl}`),
 
 	/*
 	 TYPE: Dynamic Routes
 	 ------------------------------------------
 	*/
-    "DYNAMIC_ROUTE_1": `http://localhost:3000/api/dynamic-routes/page1`,
-    "DYNAMIC_ROUTE_2": `http://localhost:3000/api/dynamic-routes/page2`,
+    "DYNAMIC_ROUTE_1": selfOrigin(`/api/dynamic-routes/page1`),
+    "DYNAMIC_ROUTE_2": selfOrigin(`/api/dynamic-routes/page2`),
 
 	/*
 	 TYPE: Auth
 	 ------------------------------------------
 	*/
-    "AUTH_PASSKEY": `http://localhost:3000/api/passkey`,
+    "AUTH_PASSKEY": selfOrigin(`/api/passkey`),
 
     
 	/*

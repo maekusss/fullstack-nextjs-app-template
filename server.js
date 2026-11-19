@@ -1,6 +1,7 @@
 const { parse } = require('url');
 const next = require('next');
 const path = require('path');
+const http = require('http');
 const express = require('express')
 
 let dev = process.env.NODE_ENV !== 'production'; // if "production", need run `npm run build` first
@@ -40,7 +41,34 @@ app.prepare().then(() => {
     // you can visit the static URL like this: http://localhost:3000/vars/custom-page/
     // !!! If using docker, http://localhost:3000/vars may not be accessible
     server.use("/vars", express.static(__dirname + "/plugins"));
-  
+
+    // In development, `./backend/server-php.js` (the demo PHP CRUD/auth backend) runs on its
+    // own port (4000). The browser only has one preview origin, so proxy same-named `.php`
+    // paths through this server's own origin instead of calling `localhost:4000` directly.
+    if (dev) {
+        const PHP_SERVER_PORT = 4000;
+        server.use((req, res, next) => {
+            if (!/\.php($|\?)/.test(req.url)) return next();
+
+            const proxyReq = http.request({
+                hostname: '127.0.0.1',
+                port: PHP_SERVER_PORT,
+                path: req.url,
+                method: req.method,
+                headers: req.headers,
+            }, (proxyRes) => {
+                res.writeHead(proxyRes.statusCode, proxyRes.headers);
+                proxyRes.pipe(res, { end: true });
+            });
+            proxyReq.on('error', (err) => {
+                console.error('PHP backend proxy error', err);
+                res.statusCode = 502;
+                res.end('PHP backend unavailable');
+            });
+            req.pipe(proxyReq, { end: true });
+        });
+    }
+
     server.all('*', async (req, res) => {
   
         try {
