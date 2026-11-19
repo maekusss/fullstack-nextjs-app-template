@@ -2,6 +2,12 @@ const { parse } = require('url');
 const next = require('next');
 const path = require('path');
 const express = require('express')
+const http = require('http');
+
+// The PHP demo backend (backend/server-php.js) listens on its own port and is
+// not reachable as "localhost" from a browser that isn't on this machine.
+// Proxy it under the app's own origin so client code can call a relative path.
+const PHP_BACKEND_PORT = process.env.PHP_BACKEND_PORT || 4000;
 
 let dev = process.env.NODE_ENV !== 'production'; // if "production", need run `npm run build` first
 const hostname = 'localhost';
@@ -40,7 +46,27 @@ app.prepare().then(() => {
     // you can visit the static URL like this: http://localhost:3000/vars/custom-page/
     // !!! If using docker, http://localhost:3000/vars may not be accessible
     server.use("/vars", express.static(__dirname + "/plugins"));
-  
+
+    // Same-origin proxy for the PHP demo backend (see note above).
+    server.use("/php-api", (req, res) => {
+        const proxyReq = http.request({
+            hostname: '127.0.0.1',
+            port: PHP_BACKEND_PORT,
+            path: req.url,
+            method: req.method,
+            headers: { ...req.headers, host: `127.0.0.1:${PHP_BACKEND_PORT}` }
+        }, (proxyRes) => {
+            res.writeHead(proxyRes.statusCode, proxyRes.headers);
+            proxyRes.pipe(res);
+        });
+        proxyReq.on('error', (err) => {
+            console.error('PHP backend proxy error:', err.message);
+            if (!res.headersSent) res.writeHead(502);
+            res.end('Bad Gateway');
+        });
+        req.pipe(proxyReq);
+    });
+
     server.all('*', async (req, res) => {
   
         try {
