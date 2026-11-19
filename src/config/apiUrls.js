@@ -8,9 +8,19 @@ const prodUrl = (myProtocol, myHostname, myPort, specifiedPort = '') => {
 
 /*
 +++ Warning: +++
-When using `npm run export` of `npm run build` command, the request URL in the server-side components 
+When using `npm run export` of `npm run build` command, the request URL in the server-side components
 cannot be "http://localhost:3000/api/xxx"
 */
+
+/**
+ * Same-origin API routes are called from both the browser (where an absolute
+ * `localhost` URL would point at the visitor's own machine behind a remote preview
+ * proxy) and from Node during SSR (where a relative URL has no base to resolve
+ * against). Use a relative path in the browser and the app's own loopback address
+ * on the server.
+ */
+const sameOriginUrl = (path) => (typeof window !== 'undefined' ? path : `http://127.0.0.1:3000${path}`);
+
 const config = {
 
 	/*
@@ -103,40 +113,46 @@ const localConfig = {
 	 TYPE: Site Configuration
 	 ------------------------------------------
 	*/
-	"MENU": `http://localhost:3000/api/navigation`,
+	"MENU": sameOriginUrl('/api/navigation'),
 
 
 	/*
 	 TYPE: Posts
 	 ------------------------------------------
 	*/
-	"RECEIVE_DEMO_LIST": `http://localhost:3000/api/posts`,
-	"RECEIVE_DEMO_LISTDETAIL": `http://localhost:3000/api/post-detail?id={id}`,
+	"RECEIVE_DEMO_LIST": sameOriginUrl('/api/posts'),
+	"RECEIVE_DEMO_LISTDETAIL": sameOriginUrl('/api/post-detail?id={id}'),
 
 	/*
 	 TYPE: Posts Pagination
 	 ------------------------------------------
 	*/
-	 "RECEIVE_PAGE_LIST": `http://localhost:3000/api/pagination/page-{page}`,
+	 "RECEIVE_PAGE_LIST": sameOriginUrl('/api/pagination/page-{page}'),
 
-	
+
 
 	/*
-	 TYPE: User (The PHP files are located at `./public/server/`)
+	 TYPE: User
+	 (Originally the PHP files at `./public/server/`; the preview serves same-origin
+	 Next.js stand-ins at `./app/api/login` and `./app/api/authenticate` instead, so no
+	 PHP runtime is required.)
 	 ------------------------------------------
 	*/
-	"LOGIN_REQUEST": "http://localhost:4000/sessions-create.php",
-	"USER_AUTHENTICATE": "http://localhost:4000/authenticate.php",
+	"LOGIN_REQUEST": "/api/login",
+	"USER_AUTHENTICATE": "/api/authenticate",
 	"SIGNUP_REQUEST": "",
 
-	  
+
 	/*
-	 TYPE: CRUD (The PHP files are located at `./public/server/`)
+	 TYPE: CRUD
+	 (Originally the PHP files at `./public/server/`; the preview serves same-origin
+	 Next.js stand-ins at `./app/api/curd` and `./app/api/curd-data-init` instead, so no
+	 PHP runtime is required.)
 	 ------------------------------------------
 	*/
-	"CRUD_SERVICE": `http://localhost:4000/curd.php`,
-	"CRUD_DATA_INIT": `http://localhost:4000/curd-data-init.php`,
-	
+	"CRUD_SERVICE": `/api/curd`,
+	"CRUD_DATA_INIT": `/api/curd-data-init`,
+
 
 	/*
 	 TYPE: Video
